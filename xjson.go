@@ -7,6 +7,16 @@ import (
 
 type Properties map[string]json.RawMessage
 
+func Nil(s *string) *string {
+	if s == nil {
+		return nil
+	}
+	if *s == "" {
+		return nil
+	}
+	return s
+}
+
 func NewProperties(m map[string]json.RawMessage) Properties {
 	props := Properties{}
 	if len(m) > 0 {
@@ -17,12 +27,34 @@ func NewProperties(m map[string]json.RawMessage) Properties {
 	return props
 }
 
+func (p Properties) UnmarshalAll(m map[string]interface{}) error {
+	for k, v := range m {
+		if err := p.Unmarshal(k, v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (p Properties) Unmarshal(key string, target interface{}) error {
 	if v, found := p[key]; found {
 		if err := json.Unmarshal(v, target); err != nil {
 			return err
 		}
 		delete(p, key)
+	}
+	return nil
+}
+
+func (p Properties) MarshalAll(m map[string]interface{}) error {
+	if m == nil {
+		return nil
+	}
+	for k, v := range m {
+		if err := p.Marshal(k, v); err != nil {
+			return err
+		}
+
 	}
 	return nil
 }
